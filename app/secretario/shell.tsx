@@ -27,7 +27,7 @@ export default function SecretarioShell({
   const [aberto, setAberto] = useState(false)
   const pathname = usePathname()
 
-  // Bloqueia scroll do body quando o drawer está aberto em mobile
+  // Bloqueia o scroll do body quando o drawer está aberto
   useEffect(() => {
     if (aberto) {
       document.body.style.overflow = 'hidden'
@@ -39,12 +39,20 @@ export default function SecretarioShell({
     }
   }, [aberto])
 
+  // Título curto da página atual para o header mobile
+  const paginaAtual =
+    menu.find((item) =>
+      item.href === '/secretario'
+        ? pathname === '/secretario'
+        : pathname.startsWith(item.href)
+    )?.label ?? 'Secretaria'
+
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
       {/* Overlay (mobile) */}
       {aberto && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-30 lg:hidden"
           onClick={() => setAberto(false)}
           aria-hidden="true"
         />
@@ -54,19 +62,19 @@ export default function SecretarioShell({
       <aside
         className={`
           fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200
-          flex flex-col z-40 transition-transform duration-300
+          flex flex-col z-40 transition-transform duration-300 ease-out
           ${aberto ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 lg:z-10
         `}
       >
-        {/* Cabeçalho */}
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-2">
+        {/* Cabeçalho do menu */}
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-2 shrink-0">
           <LogoEscola tamanho="md" comTexto subtitulo="Secretaria" />
 
           <button
             type="button"
             onClick={() => setAberto(false)}
-            className="lg:hidden text-gray-400 hover:text-gray-600 text-xl leading-none"
+            className="lg:hidden w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 text-xl leading-none transition"
             aria-label="Fechar menu"
           >
             ×
@@ -86,29 +94,31 @@ export default function SecretarioShell({
                 key={item.href}
                 href={item.href}
                 onClick={() => setAberto(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition ${
+                className={`group flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
                   ativo
                     ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-blue-700'
                 }`}
               >
                 <span
-                  className={`w-5 text-center ${
-                    ativo ? 'text-blue-500' : 'text-gray-400'
+                  className={`w-5 text-center text-base transition ${
+                    ativo
+                      ? 'text-blue-600'
+                      : 'text-gray-400 group-hover:text-blue-500'
                   }`}
                 >
                   {item.icon}
                 </span>
-                {item.label}
+                <span className="truncate">{item.label}</span>
               </Link>
             )
           })}
         </nav>
 
         {/* Rodapé */}
-        <div className="border-t border-gray-100 p-3">
+        <div className="border-t border-gray-100 p-3 shrink-0">
           <form action="/api/logout" method="post">
-            <button className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-600 hover:bg-gray-50">
+            <button className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-700 transition">
               ↩ Terminar sessão
             </button>
           </form>
@@ -116,11 +126,11 @@ export default function SecretarioShell({
       </aside>
 
       {/* Header mobile */}
-      <header className="lg:hidden sticky top-0 z-20 bg-white border-b border-gray-200 flex items-center gap-3 px-4 py-3">
+      <header className="lg:hidden sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-gray-200 flex items-center gap-3 px-4 py-3">
         <button
           type="button"
           onClick={() => setAberto(true)}
-          className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-700"
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-700 transition shrink-0"
           aria-label="Abrir menu"
         >
           <svg
@@ -131,20 +141,27 @@ export default function SecretarioShell({
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <span className="font-medium text-sm text-gray-900 truncate">
-          Secretaria
-        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium leading-none">
+            Secretaria
+          </p>
+          <p className="text-sm font-medium text-gray-900 truncate mt-0.5">
+            {paginaAtual}
+          </p>
+        </div>
       </header>
 
       {/* Conteúdo */}
       <main className="flex-1 lg:ml-64 min-w-0">
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
       </main>
     </div>
   )
