@@ -58,7 +58,6 @@ export default function NovoComprovativoForm({
 
   const diaAtual = new Date().getDate()
 
-  // Cálculo do total esperado
   const valorInfo = useMemo(() => {
     if (!servicoSelecionado) return null
 
@@ -196,7 +195,6 @@ export default function NovoComprovativoForm({
       formData.append('notes', notes)
       formData.append('file', file)
 
-      // 🔑 Anexar cada mês individualmente para o servidor ler com getAll('month')
       if (ehPropina) {
         mesesSel.forEach((mes) => formData.append('month', mes))
       }
@@ -225,11 +223,11 @@ export default function NovoComprovativoForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6"
+      className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 min-w-0"
     >
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-4 sm:space-y-6 min-w-0">
         {/* 1. SERVIÇO */}
-        <section className="bg-white border border-gray-200 rounded-xl p-6">
+        <section className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
           <h2 className="text-sm font-semibold text-gray-900">
             1. Que serviço vai pagar?
           </h2>
@@ -242,13 +240,13 @@ export default function NovoComprovativoForm({
                   key={s.id}
                   type="button"
                   onClick={() => handleMudarServico(s.id)}
-                  className={`text-left px-3 py-2.5 rounded-lg border text-sm transition ${
+                  className={`text-left px-3 py-2.5 rounded-lg border text-sm transition min-w-0 ${
                     ativo
                       ? 'border-blue-600 bg-blue-50 text-blue-900 ring-2 ring-blue-100'
                       : 'border-gray-200 text-gray-700 hover:border-blue-300'
                   }`}
                 >
-                  <p className="font-medium">{s.nome}</p>
+                  <p className="font-medium truncate">{s.nome}</p>
                   {s.tem_multa && (
                     <p className="text-[10px] text-amber-700 mt-0.5">
                       Multa {s.multa_percentual}%
@@ -267,11 +265,11 @@ export default function NovoComprovativoForm({
 
         {/* 2. VARIAÇÃO */}
         {servicoSelecionado?.tem_urgencia && (
-          <section className="bg-white border border-gray-200 rounded-xl p-6">
+          <section className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
             <h2 className="text-sm font-semibold text-gray-900">
               2. Tipo de pedido
             </h2>
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {[
                 { key: 'normal', label: 'Normal' },
                 { key: 'urgente', label: 'Urgente' },
@@ -297,11 +295,11 @@ export default function NovoComprovativoForm({
         )}
 
         {servicoSelecionado?.codigo === 'uniforme' && (
-          <section className="bg-white border border-gray-200 rounded-xl p-6">
+          <section className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
             <h2 className="text-sm font-semibold text-gray-900">
               2. Tipo de uniforme
             </h2>
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {[
                 { key: 'completo', label: 'Completo' },
                 { key: 'retalho', label: 'Retalho' },
@@ -328,8 +326,8 @@ export default function NovoComprovativoForm({
 
         {/* 3. MESES */}
         {ehPropina && (
-          <section className="bg-white border border-gray-200 rounded-xl p-6">
-            <div className="flex items-center justify-between flex-wrap gap-2">
+          <section className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
+            <div className="flex items-start sm:items-center justify-between flex-wrap gap-2">
               <h2 className="text-sm font-semibold text-gray-900">
                 3. Meses a pagar
               </h2>
@@ -343,7 +341,7 @@ export default function NovoComprovativoForm({
                 }}
                 className="text-xs text-blue-600 hover:underline"
               >
-                Selecionar todos os disponíveis
+                Selecionar todos
               </button>
             </div>
 
@@ -352,7 +350,7 @@ export default function NovoComprovativoForm({
               adiantado.
             </p>
 
-            <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
+            <div className="mt-4 grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2">
               {meses.map((m) => {
                 const bloqueado =
                   m.status === 'pago' || m.status === 'pending'
@@ -366,7 +364,7 @@ export default function NovoComprovativoForm({
                     type="button"
                     disabled={bloqueado}
                     onClick={() => toggleMes(m.chave)}
-                    className={`py-2.5 px-2 rounded-lg border-2 text-xs font-medium transition flex flex-col items-center ${
+                    className={`py-2 px-1.5 rounded-lg border-2 text-[11px] sm:text-xs font-medium transition flex flex-col items-center min-w-0 ${
                       bloqueado
                         ? m.status === 'pago'
                           ? 'border-green-200 bg-green-50 text-green-700 cursor-not-allowed'
@@ -380,7 +378,9 @@ export default function NovoComprovativoForm({
                         : 'border-gray-200 text-gray-600 hover:border-blue-300'
                     }`}
                   >
-                    <span>{m.label}</span>
+                    <span className="truncate w-full text-center">
+                      {m.label}
+                    </span>
                     {m.status === 'pago' && (
                       <span className="text-[9px] mt-0.5">✓ Pago</span>
                     )}
@@ -411,13 +411,13 @@ export default function NovoComprovativoForm({
 
         {/* 4. VALOR */}
         {servicoSelecionado && (
-          <section className="bg-white border border-gray-200 rounded-xl p-6">
+          <section className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
             <h2 className="text-sm font-semibold text-gray-900">
               {ehPropina ? '4' : '3'}. Valor pago
             </h2>
 
             {valorInfo ? (
-              <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-5">
+              <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-4 sm:p-5">
                 <p className="text-xs uppercase tracking-wide text-blue-700">
                   Valor esperado
                 </p>
@@ -425,7 +425,7 @@ export default function NovoComprovativoForm({
                 <div className="mt-2 space-y-1">
                   {valorInfo.comMulta && (
                     <>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm gap-3">
                         <span className="text-gray-600">
                           Base
                           {valorInfo.mesesCount > 1 && (
@@ -434,11 +434,11 @@ export default function NovoComprovativoForm({
                             </span>
                           )}
                         </span>
-                        <span className="text-gray-900">
+                        <span className="text-gray-900 shrink-0">
                           {valorInfo.valorBase.toLocaleString('pt-PT')} Kz
                         </span>
                       </div>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm gap-3">
                         <span className="text-red-600">
                           Multa ({valorInfo.mesesComMulta.length}{' '}
                           {valorInfo.mesesComMulta.length === 1
@@ -446,18 +446,18 @@ export default function NovoComprovativoForm({
                             : 'meses'}
                           )
                         </span>
-                        <span className="text-red-600">
+                        <span className="text-red-600 shrink-0">
                           + {valorInfo.valorMulta.toLocaleString('pt-PT')} Kz
                         </span>
                       </div>
                       <div className="border-t border-blue-200 pt-2 mt-2" />
                     </>
                   )}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <span className="text-sm font-semibold text-blue-900">
                       Total a pagar
                     </span>
-                    <span className="text-2xl font-bold text-blue-900">
+                    <span className="text-xl sm:text-2xl font-bold text-blue-900 shrink-0">
                       {valorInfo.valorTotal.toLocaleString('pt-PT')} Kz
                     </span>
                   </div>
@@ -481,7 +481,7 @@ export default function NovoComprovativoForm({
                 <button
                   type="button"
                   onClick={usarTotal}
-                  className="mt-3 text-xs text-blue-600 hover:underline"
+                  className="mt-3 text-xs text-blue-600 hover:underline text-left"
                 >
                   Preencher com o total:{' '}
                   {valorInfo.valorTotal.toLocaleString('pt-PT')} Kz
@@ -527,7 +527,7 @@ export default function NovoComprovativoForm({
 
         {/* 5. COMPROVATIVO */}
         {servicoSelecionado && (
-          <section className="bg-white border border-gray-200 rounded-xl p-6">
+          <section className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
             <h2 className="text-sm font-semibold text-gray-900">
               {ehPropina ? '5' : '4'}. Comprovativo
             </h2>
@@ -536,11 +536,11 @@ export default function NovoComprovativoForm({
             </p>
 
             {!file ? (
-              <label className="mt-4 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-xl p-8 cursor-pointer transition bg-gray-50/50">
+              <label className="mt-4 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-xl p-6 sm:p-8 cursor-pointer transition bg-gray-50/50">
                 <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xl">
                   📎
                 </div>
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-gray-700 text-center">
                   Clique para escolher o ficheiro
                 </p>
                 <p className="text-xs text-gray-400">ou arraste para aqui</p>
@@ -593,7 +593,7 @@ export default function NovoComprovativoForm({
 
         {/* 6. NOTA */}
         {servicoSelecionado && (
-          <section className="bg-white border border-gray-200 rounded-xl p-6">
+          <section className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
             <h2 className="text-sm font-semibold text-gray-900">
               {ehPropina ? '6' : '5'}. Nota (opcional)
             </h2>
@@ -617,27 +617,27 @@ export default function NovoComprovativoForm({
           </div>
         )}
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={aCarregar}
-            className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition"
-          >
-            {aCarregar ? 'A enviar…' : 'Enviar comprovativo'}
-          </button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3">
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium transition"
+            className="px-6 py-2.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium transition w-full sm:w-auto"
           >
             Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={aCarregar}
+            className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition w-full sm:w-auto"
+          >
+            {aCarregar ? 'A enviar…' : 'Enviar comprovativo'}
           </button>
         </div>
       </div>
 
       {/* RESUMO LATERAL */}
-      <aside className="lg:col-span-1">
-        <div className="bg-white border border-gray-200 rounded-xl p-6 lg:sticky lg:top-6">
+      <aside className="lg:col-span-1 min-w-0">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 lg:sticky lg:top-6">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             Resumo do envio
           </h3>
@@ -672,9 +672,9 @@ export default function NovoComprovativoForm({
 
           {valorInfo && valorNum > 0 && valorNum < valorInfo.valorTotal && (
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center justify-between text-xs gap-3">
                 <span className="text-gray-500">Saldo em falta</span>
-                <span className="font-semibold text-amber-700">
+                <span className="font-semibold text-amber-700 shrink-0">
                   {emFalta.toLocaleString('pt-PT')} Kz
                 </span>
               </div>
@@ -688,8 +688,8 @@ export default function NovoComprovativoForm({
 
 function Linha({ label, valor }: { label: string; valor: string }) {
   return (
-    <div className="flex justify-between gap-3">
-      <span className="text-gray-500">{label}</span>
+    <div className="flex justify-between gap-3 min-w-0">
+      <span className="text-gray-500 shrink-0">{label}</span>
       <span className="text-gray-900 font-medium truncate text-right">
         {valor}
       </span>

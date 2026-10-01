@@ -111,38 +111,36 @@ export default async function PainelSecretaria() {
   ]
 
   return (
-    <div>
+    <div className="min-w-0">
       {/* CABEÇALHO */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">
             {saudacao}, Secretaria
           </h1>
           <p className="mt-1 text-sm text-gray-500 capitalize">{dataHoje}</p>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          <Link
-            href="/secretario/caixa"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm"
-          >
-            💵 Registar pagamento
-          </Link>
-        </div>
+        <Link
+          href="/secretario/caixa"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm w-full sm:w-auto shrink-0"
+        >
+          💵 Registar pagamento
+        </Link>
       </div>
 
       {/* ALERTA DE PENDENTES */}
       {pendentes && pendentes > 0 ? (
         <Link
           href="/secretario/comprovativos"
-          className="mt-6 flex items-center justify-between gap-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5 hover:shadow-sm transition group"
+          className="mt-6 flex items-center justify-between gap-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 sm:p-5 hover:shadow-sm transition group"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-lg shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-base sm:text-lg shrink-0">
               {pendentes}
             </div>
-            <div>
-              <p className="font-medium text-amber-900">
+            <div className="min-w-0">
+              <p className="font-medium text-amber-900 text-sm sm:text-base">
                 {pendentes} comprovativo{pendentes !== 1 ? 's' : ''} pendente
                 {pendentes !== 1 ? 's' : ''}
               </p>
@@ -151,13 +149,13 @@ export default async function PainelSecretaria() {
               </p>
             </div>
           </div>
-          <span className="text-amber-700 text-sm font-medium group-hover:translate-x-1 transition">
+          <span className="hidden sm:inline text-amber-700 text-sm font-medium group-hover:translate-x-1 transition shrink-0">
             Analisar →
           </span>
         </Link>
       ) : (
         <div className="mt-6 flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
-          <span className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm">
+          <span className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm shrink-0">
             ✓
           </span>
           <p className="text-sm text-green-800">
@@ -167,16 +165,16 @@ export default async function PainelSecretaria() {
       )}
 
       {/* CARDS PRINCIPAIS */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {cards.map((c) => (
           <Link
             key={c.label}
             href={c.href}
-            className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-md transition group"
+            className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 hover:border-blue-300 hover:shadow-md transition group min-w-0"
           >
             <div className="flex items-start justify-between">
               <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center text-base ${corClasses(
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-sm sm:text-base ${corClasses(
                   c.cor
                 )}`}
               >
@@ -186,25 +184,29 @@ export default async function PainelSecretaria() {
                 →
               </span>
             </div>
-            <p className="mt-4 text-3xl font-semibold text-gray-900">
+            <p className="mt-3 sm:mt-4 text-2xl sm:text-3xl font-semibold text-gray-900">
               {c.valor}
             </p>
-            <p className="mt-1 text-sm font-medium text-gray-700">{c.label}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{c.sub}</p>
+            <p className="mt-1 text-xs sm:text-sm font-medium text-gray-700 leading-tight">
+              {c.label}
+            </p>
+            <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">
+              {c.sub}
+            </p>
           </Link>
         ))}
       </div>
 
       {/* RECEITA + AÇÕES RÁPIDAS */}
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
         {/* CARD DE RECEITA DO MÊS */}
-        <div className="lg:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-6 text-white">
+        <div className="lg:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-5 sm:p-6 text-white">
           <p className="text-xs uppercase tracking-wider text-blue-100">
             Arrecadado este mês
           </p>
-          <p className="mt-2 text-3xl font-bold">
+          <p className="mt-2 text-2xl sm:text-3xl font-bold break-words">
             {totalMes.toLocaleString('pt-PT')}
-            <span className="text-lg font-normal ml-1">Kz</span>
+            <span className="text-base sm:text-lg font-normal ml-1">Kz</span>
           </p>
           <p className="mt-3 text-xs text-blue-100">
             {agora.toLocaleDateString('pt-PT', {
@@ -233,11 +235,11 @@ export default async function PainelSecretaria() {
         </div>
 
         {/* AÇÕES RÁPIDAS */}
-        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6">
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 sm:p-6">
           <h2 className="text-sm font-semibold text-gray-900">
             Ações rápidas
           </h2>
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             <AcaoRapida
               href="/secretario/caixa"
               icon="💵"
@@ -265,9 +267,9 @@ export default async function PainelSecretaria() {
           </div>
 
           {/* ÚLTIMOS ALUNOS + ÚLTIMOS COMPROVATIVOS */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Alunos recentes */}
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-2">
                 Últimos alunos
               </p>
@@ -295,7 +297,7 @@ export default async function PainelSecretaria() {
                           <p className="text-xs font-medium text-gray-900 truncate">
                             {a.full_name}
                           </p>
-                          <p className="text-[10px] text-gray-400">
+                          <p className="text-[10px] text-gray-400 truncate">
                             {cls ? String(cls.name) : 'Sem classe'}
                           </p>
                         </div>
@@ -311,7 +313,7 @@ export default async function PainelSecretaria() {
             </div>
 
             {/* Comprovativos recentes */}
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-2">
                 Comprovativos recentes
               </p>
@@ -350,7 +352,7 @@ export default async function PainelSecretaria() {
                           <p className="text-xs font-medium text-gray-900 truncate">
                             {st ? String(st.full_name) : '—'}
                           </p>
-                          <p className="text-[10px] text-gray-400">
+                          <p className="text-[10px] text-gray-400 truncate">
                             {srv ? String(srv.nome) : '—'}
                             {c.month && ` · ${c.month}`}
                           </p>
@@ -409,10 +411,12 @@ function AcaoRapida({
   return (
     <Link
       href={href}
-      className={`bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center text-center gap-2 transition ${cores[cor]}`}
+      className={`bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex flex-col items-center text-center gap-2 transition min-w-0 ${cores[cor]}`}
     >
-      <span className="text-2xl">{icon}</span>
-      <span className="text-xs font-medium">{label}</span>
+      <span className="text-xl sm:text-2xl">{icon}</span>
+      <span className="text-[11px] sm:text-xs font-medium leading-tight">
+        {label}
+      </span>
     </Link>
   )
 }

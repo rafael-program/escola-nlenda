@@ -14,7 +14,7 @@ export default async function ComprovativosPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-w-0">
       <Link
         href="/dashboard"
         className="text-sm text-gray-500 hover:text-blue-600 transition"
@@ -22,9 +22,9 @@ export default async function ComprovativosPage() {
         ← Voltar ao painel
       </Link>
 
-      <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
             Meus comprovativos
           </h1>
           <p className="mt-1 text-sm text-gray-500">
@@ -34,7 +34,7 @@ export default async function ComprovativosPage() {
 
         <Link
           href="/dashboard/comprovativos/novo"
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition w-full sm:w-auto shrink-0"
         >
           + Enviar comprovativo
         </Link>
@@ -42,9 +42,17 @@ export default async function ComprovativosPage() {
 
       <div className="mt-6 space-y-3">
         {(comprovativos ?? []).length === 0 && (
-          <p className="text-sm text-gray-500">
-            Ainda não enviou nenhum comprovativo.
-          </p>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+            <p className="text-sm text-gray-500">
+              Ainda não enviou nenhum comprovativo.
+            </p>
+            <Link
+              href="/dashboard/comprovativos/novo"
+              className="mt-3 inline-block text-sm text-blue-600 hover:underline"
+            >
+              Enviar o primeiro →
+            </Link>
+          </div>
         )}
 
         {(comprovativos ?? []).map((c) => {
@@ -55,11 +63,12 @@ export default async function ComprovativosPage() {
           return (
             <div
               key={c.id}
-              className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between gap-3"
+              className="bg-white border border-gray-200 rounded-xl p-4 flex items-start sm:items-center justify-between gap-3 min-w-0"
             >
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {servico?.nome ?? 'Serviço'} {c.month ? `· ${c.month}` : ''}
+                  {servico?.nome ?? 'Serviço'}
+                  {c.month ? ` · ${c.month}` : ''}
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   Enviado em{' '}
