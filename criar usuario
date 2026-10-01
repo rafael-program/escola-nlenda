@@ -1,0 +1,2 @@
+INSERT INTO profiles (id, role, full_name)
+VALUES ('UUID_DA_SECRETARIA', 'secretario', 'Nome');
