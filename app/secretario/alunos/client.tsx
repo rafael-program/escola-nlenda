@@ -53,21 +53,28 @@ export default function AlunosClient({
       return
     startTransition(async () => {
       const r = await apagarAluno(id)
-      if (r?.erro) setErro(r.erro)
+      if ('erro' in r && typeof r.erro === 'string') setErro(r.erro)
     })
   }
 
   async function abrirDocumento(path: string) {
     const r = await gerarLinkDocumento(path)
-    if (r?.url) window.open(r.url, '_blank')
-    else setErro(r?.erro ?? 'Erro ao abrir documento.')
+    if ('url' in r && typeof r.url === 'string') {
+      window.open(r.url, '_blank')
+    } else if ('erro' in r && typeof r.erro === 'string') {
+      setErro(r.erro)
+    } else {
+      setErro('Erro ao abrir documento.')
+    }
   }
 
   return (
-    <div>
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Alunos</h1>
+    <div className="min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+            Alunos
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
             {alunos.length} aluno{alunos.length !== 1 ? 's' : ''} registado
             {alunos.length !== 1 ? 's' : ''}.
@@ -75,7 +82,7 @@ export default function AlunosClient({
         </div>
         <Link
           href="/secretario/alunos/novo"
-          className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition"
+          className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition w-full sm:w-auto shrink-0"
         >
           + Novo aluno
         </Link>
@@ -181,8 +188,12 @@ export default function AlunosClient({
                 )}
                 {filtrados.map((a) => (
                   <tr key={a.id} className="hover:bg-gray-50">
+                    {/* NOME — clicável */}
                     <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
+                      <Link
+                        href={`/secretario/alunos/${a.id}`}
+                        className="flex items-center gap-3 group"
+                      >
                         <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold flex items-center justify-center shrink-0">
                           {a.full_name
                             .split(' ')
@@ -192,7 +203,7 @@ export default function AlunosClient({
                             .toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-900 truncate">
+                          <p className="font-medium text-gray-900 truncate group-hover:text-blue-600 transition">
                             {a.full_name}
                           </p>
                           {a.birth_date && (
@@ -203,7 +214,7 @@ export default function AlunosClient({
                             </p>
                           )}
                         </div>
-                      </div>
+                      </Link>
                     </td>
 
                     <td className="px-5 py-3 text-gray-600">
@@ -254,13 +265,21 @@ export default function AlunosClient({
                     </td>
 
                     <td className="px-5 py-3 text-right">
-                      <button
-                        onClick={() => handleApagar(a.id, a.full_name)}
-                        disabled={aCarregar}
-                        className="text-xs text-gray-600 hover:text-red-600 disabled:opacity-50"
-                      >
-                        Apagar
-                      </button>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/secretario/alunos/${a.id}`}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Ver →
+                        </Link>
+                        <button
+                          onClick={() => handleApagar(a.id, a.full_name)}
+                          disabled={aCarregar}
+                          className="text-xs text-gray-600 hover:text-red-600 disabled:opacity-50"
+                        >
+                          Apagar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
