@@ -47,12 +47,32 @@ export async function procurarAlunos(query: string) {
 }
 
 /**
- * Calcula o valor da propina para um conjunto de meses.
- * Regras:
- * - Mês ATUAL → multa se hoje > dia 10
- * - Mês PASSADO (anterior ao atual) → sempre com multa
- * - Mês FUTURO → sem multa
+ * Verifica se um mês (formato "AAAA-MM") já está em atraso com multa.
+ *
+ * Regra: a multa só se aplica depois do dia 10 do mês seguinte.
+ * Ex.: mês 2026-09 → tolerância até 10/10/2026; multa a partir de 11/10/2026.
  */
+function mesTemMulta(chave: string, hoje: Date = new Date()): boolean {
+  const [anoStr, mesStr] = chave.split('-')
+  const ano = Number(anoStr)
+  const mes = Number(mesStr)
+
+  // Data limite de pagamento SEM multa = dia 10 do mês seguinte
+  const mesSeguinte = mes === 12 ? 1 : mes + 1
+  const anoSeguinte = mes === 12 ? ano + 1 : ano
+  const dataLimite = new Date(
+    anoSeguinte,
+    mesSeguinte - 1,
+    10,
+    23,
+    59,
+    59,
+    999
+  )
+
+  return hoje > dataLimite
+}
+
 function calcularPropina(
   meses: string[],
   precoMensal: number,
@@ -63,34 +83,12 @@ function calcularPropina(
   valorTotal: number
   mesesComMulta: string[]
 } {
-  const hoje = new Date()
-  const diaAtual = hoje.getDate()
-  const anoAtual = hoje.getFullYear()
-  const mesAtual = hoje.getMonth() + 1
-  const chaveAtual = `${anoAtual}-${String(mesAtual).padStart(2, '0')}`
-
   let valorMulta = 0
   const mesesComMulta: string[] = []
 
   for (const mes of meses) {
-    // Comparar strings "AAAA-MM" — funciona alfabeticamente
-    const ehPassado = mes < chaveAtual
-    const ehAtual = mes === chaveAtual
-
-    let aplicaMulta = false
-
-    if (ehPassado) {
-      // Meses passados → sempre com multa
-      aplicaMulta = true
-    } else if (ehAtual) {
-      // Mês atual → só se passou do dia 10
-      aplicaMulta = diaAtual > 10
-    }
-    // Futuro → sem multa
-
-    if (aplicaMulta) {
-      const valorMultaMes = (precoMensal * multaPercentual) / 100
-      valorMulta += valorMultaMes
+    if (mesTemMulta(mes)) {
+      valorMulta += (precoMensal * multaPercentual) / 100
       mesesComMulta.push(mes)
     }
   }
@@ -107,9 +105,6 @@ function calcularPropina(
   }
 }
 
-/**
- * Versão simples de calcularValor — usada para serviços que NÃO são propina.
- */
 export async function calcularValor(
   servicoId: number,
   classeId: number,
@@ -159,7 +154,7 @@ export async function registarPagamento(dados: {
   servicoId: number
   classeId: number
   variacao: string | null
-  mesesReferencia: string[] | null  // ⚠ agora é array
+  mesesReferencia: string[] | null
   formaPagamento: 'fisico' | 'banco'
   banco: string | null
   observacao: string | null
@@ -193,7 +188,6 @@ export async function registarPagamento(dados: {
       return { erro: 'Escolha pelo menos um mês.' }
     }
 
-    // Preço da propina
     let precoQuery = supabaseAdmin
       .from('tabela_precos')
       .select('valor')
@@ -222,10 +216,8 @@ export async function registarPagamento(dados: {
     valorTotal = calc.valorTotal
     comMulta = calc.mesesComMulta.length > 0
 
-    // Mês para o recibo = primeiro mês pago (ordenado)
     mesParaRecibo = [...dados.mesesReferencia].sort()[0]
   } else {
-    // Serviços normais
     const calc = await calcularValor(
       dados.servicoId,
       dados.classeId,
@@ -284,10 +276,9 @@ export async function registarPagamento(dados: {
       : 'http://localhost:3000')
   const urlVerificacao = `${baseUrl}/verificar/${codigoVerificacao}`
 
-  // Nome do serviço para o recibo
   const servicoNomeFinal = ehPropina
     ? `Propina (${dados.mesesReferencia!.length} ${
-        dados.mesesReferencia!.length === 1 ? 'mes' : 'meses'
+        dados.mesesReferencia!.length === 1 ? 'mês' : 'meses'
       })`
     : servico.nome
 
@@ -303,6 +294,7 @@ export async function registarPagamento(dados: {
     servicoNome: servicoNomeFinal,
     variacao: dados.variacao,
     mesReferencia: mesParaRecibo,
+    mesesReferencia: dados.mesesReferencia,
     valorBase,
     valorMulta,
     valorTotal,

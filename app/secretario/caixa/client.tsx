@@ -57,6 +57,32 @@ const OPCOES_UNIFORME: Opcao[] = [
   { key: 'retalho', label: 'Retalho' },
 ]
 
+/**
+ * Verifica se um mês (formato "AAAA-MM") já está em atraso com multa.
+ *
+ * Regra: a multa só se aplica depois do dia 10 do mês seguinte.
+ * Ex.: mês 2026-09 → tolerância até 10/10/2026; multa a partir de 11/10/2026.
+ */
+function mesTemMulta(chave: string, hoje: Date = new Date()): boolean {
+  const [anoStr, mesStr] = chave.split('-')
+  const ano = Number(anoStr)
+  const mes = Number(mesStr)
+
+  const mesSeguinte = mes === 12 ? 1 : mes + 1
+  const anoSeguinte = mes === 12 ? ano + 1 : ano
+  const dataLimite = new Date(
+    anoSeguinte,
+    mesSeguinte - 1,
+    10,
+    23,
+    59,
+    59,
+    999
+  )
+
+  return hoje > dataLimite
+}
+
 function categoria(codigo: string): { icone: string; cor: string } {
   const mapa: Record<string, { icone: string; cor: string }> = {
     propina: { icone: '📅', cor: 'blue' },
@@ -122,11 +148,6 @@ export default function CaixaClient({
   )
 
   const anoAtual = new Date().getFullYear()
-  const chaveAtual = useMemo(() => {
-    const hoje = new Date()
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0')
-    return `${hoje.getFullYear()}-${mes}`
-  }, [])
 
   const mesesPagosDoAluno = useMemo(() => {
     if (!aluno) return new Set<string>()
@@ -153,24 +174,11 @@ export default function CaixaClient({
       const precoMensal = preco.valor
       const multaPercentual = servicoSelecionado.multa_percentual
 
-      // Aplicar multa a:
-      // - meses passados (sempre)
-      // - mês atual (se dia > 10)
-      const hoje = new Date()
-      const diaAtual = hoje.getDate()
-
       let valorMulta = 0
       const mesesComMulta: string[] = []
 
       for (const mes of mesesSel) {
-        const ehPassado = mes < chaveAtual
-        const ehAtual = mes === chaveAtual
-
-        let aplica = false
-        if (ehPassado) aplica = true
-        else if (ehAtual) aplica = diaAtual > 10
-
-        if (aplica) {
+        if (mesTemMulta(mes)) {
           valorMulta += (precoMensal * multaPercentual) / 100
           mesesComMulta.push(mes)
         }
@@ -189,7 +197,6 @@ export default function CaixaClient({
       }
     }
 
-    // Outros serviços
     const preco = precos.find(
       (p) =>
         p.servico_id === servicoSelecionado.id &&
@@ -206,7 +213,7 @@ export default function CaixaClient({
       mesesComMulta: [],
       mesesCount: 0,
     }
-  }, [aluno, servicoSelecionado, variacao, mesesSel, precos, chaveAtual])
+  }, [aluno, servicoSelecionado, variacao, mesesSel, precos])
 
   const prontoParaRegistar =
     !!aluno &&
@@ -298,10 +305,12 @@ export default function CaixaClient({
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Caixa</h1>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+            Caixa
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
             Registe o pagamento presencial e emita o recibo.
           </p>
@@ -310,24 +319,24 @@ export default function CaixaClient({
 
       {/* SUCESSO */}
       {sucesso && (
-        <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 flex items-start gap-4 animate-fade-in">
-          <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center text-xl shrink-0">
+        <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 sm:p-6 flex items-start gap-3 sm:gap-4 animate-fade-in">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-500 text-white flex items-center justify-center text-lg sm:text-xl shrink-0">
             ✓
           </div>
-          <div className="flex-1">
-            <p className="text-base font-semibold text-green-900">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm sm:text-base font-semibold text-green-900">
               Pagamento registado com sucesso
             </p>
-            <p className="mt-1 text-sm text-green-700">
+            <p className="mt-1 text-xs sm:text-sm text-green-700 break-words">
               Recibo <strong>{sucesso.numero}</strong> · Código{' '}
-              <strong className="font-mono">{sucesso.codigo}</strong>
+              <strong className="font-mono break-all">{sucesso.codigo}</strong>
             </p>
           </div>
           <button
             onClick={resetar}
             className="text-xs text-green-700 hover:text-green-900 underline shrink-0"
           >
-            Novo pagamento
+            Novo
           </button>
         </div>
       )}
@@ -335,13 +344,13 @@ export default function CaixaClient({
       {erro && (
         <div className="mt-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-4 py-3 flex items-center gap-2">
           <span className="text-lg">⚠</span>
-          {erro}
+          <span className="min-w-0">{erro}</span>
         </div>
       )}
 
       {/* PASSO 1 — ALUNO */}
       <section className="mt-6 bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center gap-3">
           <span
             className={`w-8 h-8 rounded-full text-sm font-semibold flex items-center justify-center shrink-0 ${
               aluno ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'
@@ -349,7 +358,9 @@ export default function CaixaClient({
           >
             {aluno ? '✓' : '1'}
           </span>
-          <h2 className="text-sm font-semibold text-gray-900">Escolher aluno</h2>
+          <h2 className="text-sm font-semibold text-gray-900">
+            Escolher aluno
+          </h2>
           {aluno && (
             <button
               onClick={() => {
@@ -365,11 +376,11 @@ export default function CaixaClient({
           )}
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {!aluno ? (
             <>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1 min-w-0">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                     🔍
                   </span>
@@ -385,7 +396,7 @@ export default function CaixaClient({
                 <button
                   onClick={handleProcurar}
                   disabled={procurando || query.length < 2}
-                  className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium transition"
+                  className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium transition w-full sm:w-auto"
                 >
                   {procurando ? 'A procurar…' : 'Procurar'}
                 </button>
@@ -435,8 +446,10 @@ export default function CaixaClient({
                   .toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-gray-900">{aluno.full_name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="font-medium text-gray-900 truncate">
+                  {aluno.full_name}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5 truncate">
                   {aluno.classe ?? '—'}
                   {aluno.turma ? ` / ${aluno.turma}` : ''}
                   {aluno.nome_pai ? ` · Pai: ${aluno.nome_pai}` : ''}
@@ -450,10 +463,11 @@ export default function CaixaClient({
       {/* PASSO 2 — SERVIÇO */}
       {aluno && (
         <section className="mt-4 bg-white border border-gray-200 rounded-xl overflow-hidden animate-fade-up">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center gap-3">
             <span
               className={`w-8 h-8 rounded-full text-sm font-semibold flex items-center justify-center shrink-0 ${
-                servicoSelecionado                  ? 'bg-green-500 text-white'
+                servicoSelecionado
+                  ? 'bg-green-500 text-white'
                   : 'bg-blue-600 text-white'
               }`}
             >
@@ -464,8 +478,8 @@ export default function CaixaClient({
             </h2>
           </div>
 
-          <div className="p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
               {servicos.map((s) => {
                 const cat = categoria(s.codigo)
                 const ativo = servicoId === s.id
@@ -473,14 +487,16 @@ export default function CaixaClient({
                   <button
                     key={s.id}
                     onClick={() => handleMudarServico(s.id)}
-                    className={`px-4 py-3 rounded-xl border-2 text-sm transition text-left ${corServico(
+                    className={`px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border-2 text-sm transition text-left min-w-0 ${corServico(
                       cat.cor,
                       ativo
                     )}`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{cat.icone}</span>
-                      <p className="font-medium">{s.nome}</p>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-base sm:text-lg shrink-0">
+                        {cat.icone}
+                      </span>
+                      <p className="font-medium truncate">{s.nome}</p>
                     </div>
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {s.tem_multa && (
@@ -504,7 +520,7 @@ export default function CaixaClient({
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-3">
                   Tipo de pedido
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {OPCOES_URGENCIA.map((v) => (
                     <button
                       key={v.key}
@@ -527,7 +543,7 @@ export default function CaixaClient({
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-3">
                   Tipo de uniforme
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {OPCOES_UNIFORME.map((v) => (
                     <button
                       key={v.key}
@@ -568,8 +584,7 @@ export default function CaixaClient({
                     const chave = `${ano}-${m.key}`
                     const jaPago = mesesPagosDoAluno.has(chave)
                     const ativo = mesesSel.includes(chave)
-                    const ehPassado = chave < chaveAtual
-                    const ehAtual = chave === chaveAtual
+                    const temMulta = mesTemMulta(chave)
 
                     return (
                       <button
@@ -580,21 +595,17 @@ export default function CaixaClient({
                         title={
                           jaPago
                             ? `${m.label} · já pago`
-                            : ehPassado
+                            : temMulta
                             ? `${m.label} · atraso (com multa)`
-                            : ehAtual
-                            ? `${m.label} · mês atual`
-                            : `${m.label} · adiantado (sem multa)`
+                            : `${m.label} · dentro do prazo (sem multa)`
                         }
                         className={`relative py-2 px-1 rounded-lg border-2 text-xs font-medium transition flex flex-col items-center ${
                           jaPago
                             ? 'border-green-200 bg-green-50 text-green-700 cursor-not-allowed'
                             : ativo
                             ? 'border-blue-600 bg-blue-600 text-white ring-2 ring-blue-200'
-                            : ehPassado
+                            : temMulta
                             ? 'border-red-200 bg-red-50 text-red-700 hover:border-red-400'
-                            : ehAtual
-                            ? 'border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-400'
                             : 'border-gray-200 text-gray-600 hover:border-blue-300'
                         }`}
                       >
@@ -610,18 +621,20 @@ export default function CaixaClient({
 
                 <p className="mt-3 text-xs text-gray-500 leading-relaxed">
                   <strong className="text-red-600">Vermelho:</strong> meses em
-                  atraso (com multa).{' '}
-                  <strong className="text-amber-600">Laranja:</strong> mês
-                  atual.{' '}
-                  <strong className="text-gray-600">Cinzento:</strong> meses
-                  futuros (sem multa).{' '}
-                  <strong className="text-green-600">Verde ✓:</strong> já pagos.
+                  atraso — a multa só se aplica após o dia 10 do mês
+                  seguinte.{' '}
+                  <strong className="text-gray-600">Cinzento:</strong> dentro
+                  do prazo, sem multa.{' '}
+                  <strong className="text-green-600">Verde ✓:</strong> já
+                  pagos.
                 </p>
 
                 {mesesSel.length > 0 && (
                   <p className="mt-2 text-xs text-blue-700 font-medium">
                     {mesesSel.length}{' '}
-                    {mesesSel.length === 1 ? 'mês selecionado' : 'meses selecionados'}
+                    {mesesSel.length === 1
+                      ? 'mês selecionado'
+                      : 'meses selecionados'}
                   </p>
                 )}
               </div>
@@ -633,7 +646,7 @@ export default function CaixaClient({
       {/* PASSO 3 — VALOR + PAGAMENTO */}
       {aluno && servicoSelecionado && (
         <section className="mt-4 bg-white border border-gray-200 rounded-xl overflow-hidden animate-fade-up">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center gap-3">
             <span className="w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-semibold flex items-center justify-center shrink-0">
               3
             </span>
@@ -642,12 +655,12 @@ export default function CaixaClient({
             </h2>
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {valorInfo ? (
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-6">
                 {valorInfo.comMulta && (
                   <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm gap-3">
                       <span className="text-gray-600">
                         Valor base
                         {valorInfo.mesesCount > 1 && (
@@ -656,20 +669,22 @@ export default function CaixaClient({
                           </span>
                         )}
                       </span>
-                      <span className="text-gray-900 font-medium">
+                      <span className="text-gray-900 font-medium shrink-0">
                         {valorInfo.valorBase.toLocaleString('pt-PT')} Kz
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm gap-3">
                       <span className="text-red-600 flex items-center gap-1">
-                        <span>⚠</span> Multa por atraso (
-                        {valorInfo.mesesComMulta.length}{' '}
-                        {valorInfo.mesesComMulta.length === 1
-                          ? 'mês'
-                          : 'meses'}
-                        )
+                        <span>⚠</span>
+                        <span>
+                          Multa por atraso ({valorInfo.mesesComMulta.length}{' '}
+                          {valorInfo.mesesComMulta.length === 1
+                            ? 'mês'
+                            : 'meses'}
+                          )
+                        </span>
                       </span>
-                      <span className="text-red-600 font-medium">
+                      <span className="text-red-600 font-medium shrink-0">
                         + {valorInfo.valorMulta.toLocaleString('pt-PT')} Kz
                       </span>
                     </div>
@@ -677,17 +692,19 @@ export default function CaixaClient({
                   </div>
                 )}
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-sm font-semibold text-blue-900 uppercase tracking-wide">
+                  <span className="text-xs sm:text-sm font-semibold text-blue-900 uppercase tracking-wide">
                     Total a pagar
                   </span>
-                  <span className="text-4xl font-bold text-blue-900">
+                  <span className="text-2xl sm:text-4xl font-bold text-blue-900 break-words">
                     {valorInfo.valorTotal.toLocaleString('pt-PT')}
-                    <span className="text-lg font-normal ml-1">Kz</span>
+                    <span className="text-base sm:text-lg font-normal ml-1">
+                      Kz
+                    </span>
                   </span>
                 </div>
               </div>
             ) : (
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-5 text-sm text-amber-800">
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 sm:p-5 text-sm text-amber-800">
                 <p className="font-medium mb-1">
                   ⚠ Falta informação para calcular o valor.
                 </p>
@@ -711,10 +728,10 @@ export default function CaixaClient({
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-3">
                     Forma de pagamento
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <button
                       onClick={() => setFormaPagamento('fisico')}
-                      className={`px-5 py-4 rounded-xl border-2 text-sm transition text-left ${
+                      className={`px-3 py-3 sm:px-5 sm:py-4 rounded-xl border-2 text-sm transition text-left min-w-0 ${
                         formaPagamento === 'fisico'
                           ? 'border-green-600 bg-green-50 text-green-900 ring-2 ring-green-100'
                           : 'border-gray-200 text-gray-700 hover:border-green-300'
@@ -730,7 +747,7 @@ export default function CaixaClient({
                     </button>
                     <button
                       onClick={() => setFormaPagamento('banco')}
-                      className={`px-5 py-4 rounded-xl border-2 text-sm transition text-left ${
+                      className={`px-3 py-3 sm:px-5 sm:py-4 rounded-xl border-2 text-sm transition text-left min-w-0 ${
                         formaPagamento === 'banco'
                           ? 'border-violet-600 bg-violet-50 text-violet-900 ring-2 ring-violet-100'
                           : 'border-gray-200 text-gray-700 hover:border-violet-300'
@@ -752,7 +769,7 @@ export default function CaixaClient({
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-3">
                       Banco
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {['BAI', 'SOL'].map((b) => (
                         <button
                           key={b}
@@ -787,7 +804,7 @@ export default function CaixaClient({
                   <button
                     onClick={handleRegistar}
                     disabled={!prontoParaRegistar || aGravar}
-                    className="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white text-base font-semibold transition shadow-lg shadow-blue-500/20 disabled:shadow-none"
+                    className="w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white text-sm sm:text-base font-semibold transition shadow-lg shadow-blue-500/20 disabled:shadow-none"
                   >
                     {aGravar ? (
                       <span className="flex items-center justify-center gap-2">
